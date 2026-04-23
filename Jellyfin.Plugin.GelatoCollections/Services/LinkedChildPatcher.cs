@@ -47,17 +47,18 @@ internal static class LinkedChildPatcher
             BaseItem? realItem = candidates?
                 .FirstOrDefault(item => string.Equals(item.Path, lc.Path, StringComparison.OrdinalIgnoreCase));
 
-            // Fallback: search the full library by IMDb ID extracted from the gelato:// path.
+            // Fallback: search the full library by provider ID extracted from the gelato:// path.
+            // Gelato uses gelato://stub/ttXXXX (IMDb) or gelato://stub/tmdb:XXXX (TMDB).
             if (realItem is null)
             {
-                var imdbId = ExtractImdbId(lc.Path);
-                if (imdbId is not null)
+                var providerId = ExtractProviderId(lc.Path);
+                if (providerId is not null)
                 {
                     realItem = libraryManager.GetItemList(new InternalItemsQuery
                     {
                         HasAnyProviderId = new Dictionary<string, string>
                         {
-                            { MetadataProvider.Imdb.ToString(), imdbId }
+                            { providerId.Value.Provider, providerId.Value.Id }
                         },
                         Recursive = true
                     }).FirstOrDefault();
@@ -86,16 +87,28 @@ internal static class LinkedChildPatcher
         return (newChildren, patched);
     }
 
-    internal static string? ExtractImdbId(string path)
+    internal static (string Provider, string Id)? ExtractProviderId(string path)
     {
-        // gelato://stub/ttXXXXXXX  →  ttXXXXXXX
+        // gelato://stub/ttXXXXXXX   →  (Imdb, ttXXXXXXX)
+        // gelato://stub/tmdb:XXXXX  →  (Tmdb, XXXXX)
         var lastSlash = path.LastIndexOf('/');
         if (lastSlash < 0)
         {
             return null;
         }
 
-        var candidate = path[(lastSlash + 1)..];
-        return candidate.StartsWith("tt", StringComparison.OrdinalIgnoreCase) ? candidate : null;
+        var segment = path[(lastSlash + 1)..];
+
+        if (segment.StartsWith("tt", StringComparison.OrdinalIgnoreCase))
+        {
+            return (MetadataProvider.Imdb.ToString(), segment);
+        }
+
+        if (segment.StartsWith("tmdb:", StringComparison.OrdinalIgnoreCase))
+        {
+            return (MetadataProvider.Tmdb.ToString(), segment[5..]);
+        }
+
+        return null;
     }
 }

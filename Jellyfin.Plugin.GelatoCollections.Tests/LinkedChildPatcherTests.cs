@@ -128,4 +128,33 @@ public class LinkedChildPatcherTests
             .Returns(new List<BaseItem> { item }.AsReadOnly());
         return mock.Object;
     }
+
+    // T5: TMDB-format path (gelato://stub/tmdb:XXXX) is resolved correctly.
+    [Fact]
+    public void Patch_TmdbFormatPath_PopulatesItemId()
+    {
+        var itemId = Guid.NewGuid();
+        var tmdbId = "155";
+        var path = $"gelato://stub/tmdb:{tmdbId}";
+
+        var children = new[]
+        {
+            new LinkedChild { Path = path, Type = LinkedChildType.Manual }
+        };
+
+        var libraryItem = new Movie { Id = itemId };
+        libraryItem.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+
+        var mock = new Mock<ILibraryManager>();
+        mock.Setup(m => m.GetItemList(It.Is<InternalItemsQuery>(q =>
+                q.HasAnyProviderId != null &&
+                q.HasAnyProviderId.ContainsKey(MetadataProvider.Tmdb.ToString()) &&
+                q.HasAnyProviderId[MetadataProvider.Tmdb.ToString()] == tmdbId)))
+            .Returns(new List<BaseItem> { libraryItem }.AsReadOnly());
+
+        var (patched, count) = LinkedChildPatcher.Patch(children, Prefix, mock.Object, null, Logger, "Test");
+
+        Assert.Equal(1, count);
+        Assert.Equal(itemId, patched[0].ItemId);
+    }
 }
