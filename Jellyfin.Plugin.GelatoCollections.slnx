@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Jellyfin.Plugin.GelatoCollections.Tests/Jellyfin.Plugin.GelatoCollections.Tests.csproj" />
+  <Project Path="Jellyfin.Plugin.GelatoCollections/Jellyfin.Plugin.GelatoCollections.csproj" />
+</Solution>

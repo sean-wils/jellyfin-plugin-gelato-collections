@@ -1,0 +1,12 @@
+---
+version: "0.1.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+guid: "a3f7c2d1-84e5-4b6f-9c3a-2d1e5f8b0a4c"
+name: "Gelato Collections"
+description: "Patches Gelato stub item GUIDs into BoxSet LinkedChildren so collection membership survives Jellyfin restarts."
+overview: "Fixes an incompatibility between the Gelato virtual-item plugin and Jellyfin's BoxSet persistence. Without this plugin, all items disappear from BoxSets on every Jellyfin restart."
+owner: "sean-wils"
+category: "General"
+imageUrl: ""
+changelog: "Initial release."
