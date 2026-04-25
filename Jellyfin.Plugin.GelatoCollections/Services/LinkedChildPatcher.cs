@@ -38,8 +38,18 @@ internal static class LinkedChildPatcher
                 continue;
             }
 
+            // Already resolved: just clear the gelato:// path so Jellyfin's cleanup task
+            // won't remove it (cleanup removes entries whose path can't be found on disk).
             if (lc.ItemId.HasValue && lc.ItemId.Value != Guid.Empty)
             {
+                newChildren[i] = new LinkedChild
+                {
+                    Path = null,
+                    ItemId = lc.ItemId,
+                    LibraryItemId = lc.LibraryItemId,
+                    Type = lc.Type
+                };
+                patched++;
                 continue;
             }
 
@@ -74,9 +84,12 @@ internal static class LinkedChildPatcher
                 continue;
             }
 
+            // Clear the gelato:// path: Jellyfin's cleanup task removes LinkedChildren
+            // whose path can't be resolved on disk. Omitting the path (as Jellyfin does
+            // for API-added collection members) lets cleanup validate by ItemId instead.
             newChildren[i] = new LinkedChild
             {
-                Path = lc.Path,
+                Path = null,
                 ItemId = realItem.Id,
                 LibraryItemId = realItem.Id.ToString("N"),
                 Type = lc.Type
